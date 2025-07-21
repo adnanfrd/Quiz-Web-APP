@@ -2,7 +2,7 @@
 
 import { createQuizInDb, getQuizFromDb, saveQuizResultInDb } from "./quiz-store"
 import { revalidatePath } from "next/cache"
-import type { Question } from "./quiz-store" // Import Question type
+import type { Question } from "./quiz-store"
 
 interface CreateQuizData {
   title: string
@@ -14,8 +14,10 @@ interface CreateQuizData {
 
 export async function createQuiz(data: CreateQuizData) {
   try {
+    console.log("Server Action: createQuiz - Attempting to create quiz in DB.") // Add this log
     const newQuiz = await createQuizInDb(data)
-    revalidatePath("/") // Revalidate root path to show new quiz on admin dashboard
+    console.log("Server Action: createQuiz - Quiz created successfully:", newQuiz._id) // Add this log
+    revalidatePath("/")
     return { success: true, quizId: newQuiz._id }
   } catch (error: any) {
     console.error("Error in createQuiz Server Action:", error)
@@ -25,8 +27,10 @@ export async function createQuiz(data: CreateQuizData) {
 
 export async function submitQuiz(quizId: string, studentAnswers: number[]) {
   try {
+    console.log(`Server Action: submitQuiz - Attempting to get quiz ${quizId} from DB.`) // Add this log
     const quiz = await getQuizFromDb(quizId)
     if (!quiz) {
+      console.warn(`Server Action: submitQuiz - Quiz ${quizId} not found.`) // Add this log
       return { success: false, message: "Quiz not found." }
     }
 
@@ -40,8 +44,10 @@ export async function submitQuiz(quizId: string, studentAnswers: number[]) {
       }
     })
 
+    console.log(`Server Action: submitQuiz - Saving quiz result for quiz ${quizId}. Score: ${score}`) // Add this log
     await saveQuizResultInDb(quizId, quiz.title, studentAnswers, correctAnswers, score, quiz.questions.length)
-    revalidatePath(`/quizzes/${quizId}/results`) // Revalidate results page
+    console.log("Server Action: submitQuiz - Quiz result saved successfully.") // Add this log
+    revalidatePath(`/quizzes/${quizId}/results`)
 
     return { success: true, score, message: "Quiz submitted successfully!" }
   } catch (error: any) {

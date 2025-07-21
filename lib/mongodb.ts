@@ -3,6 +3,7 @@ import mongoose from "mongoose"
 const MONGODB_URI = process.env.MONGODB_URI
 
 if (!MONGODB_URI) {
+  console.error("MONGODB_URI is not defined!") // Add this log
   throw new Error("Please define the MONGODB_URI environment variable inside .env.local")
 }
 
@@ -14,6 +15,7 @@ if (!cached) {
 
 async function dbConnect() {
   if (cached.conn) {
+    console.log("Using cached MongoDB connection.") // Add this log
     return cached.conn
   }
 
@@ -22,6 +24,7 @@ async function dbConnect() {
       bufferCommands: false,
     }
 
+    console.log("Attempting to connect to MongoDB...") // Add this log
     cached.promise = mongoose
       .connect(MONGODB_URI, opts)
       .then((mongoose) => {
