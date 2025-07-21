@@ -1,11 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { getQuizzesFromDb } from "@/lib/quiz-store"
-import { format } from "date-fns"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { getQuizzesFromDb } from "@/lib/quiz-store";
+import { format } from "date-fns";
 
-export default function AdminDashboardPage() {
-  const quizzes = getQuizzesFromDb()
+export default async function AdminDashboardPage() {
+  const quizzes = await getQuizzesFromDb();
 
   return (
     <div className="grid gap-6">
@@ -21,7 +21,7 @@ export default function AdminDashboardPage() {
             No quizzes created yet. Click "Create New Quiz" to get started!
           </p>
         ) : (
-          quizzes.map((quiz) => (
+          quizzes.map((quiz: any) => ( // replace 'any' with 'Quiz' type if you have one
             <Card key={quiz.id}>
               <CardHeader>
                 <CardTitle>{quiz.title}</CardTitle>
@@ -45,5 +45,5 @@ export default function AdminDashboardPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
