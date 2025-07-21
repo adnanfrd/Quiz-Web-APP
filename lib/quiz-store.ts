@@ -70,13 +70,13 @@ export async function createQuizInDb(data: Omit<Quiz, "_id" | "createdAt">): Pro
 export async function getQuizFromDb(id: string): Promise<Quiz | null> {
   await dbConnect()
   const quiz = await QuizModel.findById(id).lean()
-  return quiz
+  return quiz as Quiz | null // ✅ Fix
 }
 
 export async function getQuizzesFromDb(): Promise<Quiz[]> {
   await dbConnect()
   const quizzes = await QuizModel.find({}).lean()
-  return quizzes
+  return quizzes as unknown as Quiz[] // ✅ Fix
 }
 
 export async function saveQuizResultInDb(
@@ -103,7 +103,7 @@ export async function saveQuizResultInDb(
 export async function getQuizResultsFromDb(quizId: string): Promise<QuizResult[]> {
   await dbConnect()
   const results = await QuizResultModel.find({ quizId }).lean()
-  return results
+  return results as unknown as QuizResult[] // ✅ Fix
 }
 
 // Optional: Seed some dummy data for testing

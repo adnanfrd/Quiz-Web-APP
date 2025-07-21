@@ -5,15 +5,21 @@ import { format } from "date-fns"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { getQuizzesFromDb } from "@/lib/quiz-store"
 import { Clock, Repeat, Share2, Eye, PlusCircle } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
 
 export default async function AdminDashboardPage() {
   const quizzes = await getQuizzesFromDb()
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950">
-      <header className="flex items-center justify-between h-16 px-6 border-b bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm">
+    <div className="min-h-screen w-full flex flex-col bg-gray-50 dark:bg-gray-950">
+      {/* Header */}
+      <header className="sticky top-0 z-50 flex items-center justify-between h-16 px-6 border-b bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm w-full">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Admin Dashboard</h1>
@@ -26,11 +32,13 @@ export default async function AdminDashboardPage() {
         </Button>
       </header>
 
-      <main className="flex-1 p-6 md:p-8 lg:p-10">
-        <div className="grid gap-8">
-          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-50">Your Quizzes</h2>
+      {/* Main Content */}
+      <main className="flex-1 w-full p-6 md:p-8 lg:p-10">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-50 mb-8">Your Quizzes</h2>
+
           {quizzes.length === 0 ? (
-            <div className="col-span-full text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-md">
               <p className="text-lg text-muted-foreground mb-4">
                 No quizzes created yet. Click "Create New Quiz" to get started!
               </p>
@@ -42,7 +50,7 @@ export default async function AdminDashboardPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {quizzes.map((quiz) => (
                 <Card
                   key={quiz._id}
@@ -52,7 +60,9 @@ export default async function AdminDashboardPage() {
                     <CardTitle className="text-xl font-semibold text-gray-900 dark:text-gray-50">
                       {quiz.title}
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{quiz.description}</p>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {quiz.description}
+                    </p>
                   </CardHeader>
                   <CardContent className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
                     <div className="flex items-center gap-2">
@@ -76,7 +86,11 @@ export default async function AdminDashboardPage() {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="outline" size="sm" className="flex-1 bg-transparent w-full">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 bg-transparent w-full"
+                          >
                             <Share2 className="mr-2 h-4 w-4" />
                             <Link href={`/quiz/${quiz._id}`}>Share Link</Link>
                           </Button>

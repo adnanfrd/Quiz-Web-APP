@@ -1,11 +1,23 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { getQuizzesFromDb } from "@/lib/quiz-store"
-import { format } from "date-fns"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { getQuizzesFromDb } from "@/lib/quiz-store";
+import { format } from "date-fns";
 
 export default async function AdminDashboardPage() {
-  const quizzes = await getQuizzesFromDb()
+  let quizzes = [];
+
+  try {
+    quizzes = await getQuizzesFromDb();
+  } catch (err) {
+    console.error("Failed to fetch quizzes:", err);
+    // Optionally render an error UI
+    return (
+      <div className="text-center text-red-500">
+        Failed to load quizzes. Please check the server connection.
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-6">
@@ -21,8 +33,8 @@ export default async function AdminDashboardPage() {
             No quizzes created yet. Click "Create New Quiz" to get started!
           </p>
         ) : (
-          quizzes.map((quiz) => (
-            <Card key={quiz.id}>
+          quizzes.map((quiz: any) => (
+            <Card key={quiz._id}>
               <CardHeader>
                 <CardTitle>{quiz.title}</CardTitle>
               </CardHeader>
@@ -33,10 +45,10 @@ export default async function AdminDashboardPage() {
                 <p className="text-sm">Created: {format(new Date(quiz.createdAt), "PPP")}</p>
                 <div className="flex gap-2 mt-4">
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/quiz/${quiz.id}`}>Share Link</Link>
+                    <Link href={`/quiz/${quiz._id}`}>Share Link</Link>
                   </Button>
                   <Button variant="outline" size="sm" asChild>
-                    <Link href={`/admin/quizzes/${quiz.id}/results`}>View Results</Link>
+                    <Link href={`/admin/quizzes/${quiz._id}/results`}>View Results</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -45,5 +57,5 @@ export default async function AdminDashboardPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
