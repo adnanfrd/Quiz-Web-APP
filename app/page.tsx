@@ -26,8 +26,8 @@ export default async function AdminDashboardPage() {
         </Button>
       </header>
 
-      <main className="flex-1 p-4 md:p-6 lg:p-10">
-        <div className="grid gap-6">
+      <main className="flex-1 p-6 md:p-8 lg:p-10">
+        <div className="grid gap-8">
           <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-50">Your Quizzes</h2>
           {quizzes.length === 0 ? (
             <div className="col-span-full text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-md">
@@ -42,65 +42,57 @@ export default async function AdminDashboardPage() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-2">
               {quizzes.map((quiz) => (
                 <Card
                   key={quiz._id}
-                  className="flex flex-col justify-between h-full hover:shadow-lg transition-shadow duration-200 w-full"
+                  className="flex flex-col justify-between h-full hover:shadow-lg transition-shadow duration-200"
                 >
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-50 break-words line-clamp-2">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-xl font-semibold text-gray-900 dark:text-gray-50">
                       {quiz.title}
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1 break-words line-clamp-2">
-                      {quiz.description}
-                    </p>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{quiz.description}</p>
                   </CardHeader>
-
-                  <CardContent className="space-y-3 text-sm text-gray-700 dark:text-gray-300 px-4 pb-4">
-                    <div className="flex items-center gap-2 flex-wrap">
+                  <CardContent className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+                    <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span>Duration: {quiz.durationMinutes} minutes</span>
                     </div>
-                    <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
                       <Repeat className="h-4 w-4 text-muted-foreground" />
-                      <span>Attempts:</span>
+                      <span>Attempts: </span>
                       {quiz.maxAttempts === 0 ? (
                         <Badge variant="secondary">Unlimited</Badge>
                       ) : (
                         <Badge variant="secondary">{quiz.maxAttempts}</Badge>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground pt-2">
                       Created: {format(new Date(quiz.createdAt), "PPP")}
                     </p>
                   </CardContent>
-
-                  <div className="px-4 pb-4 pt-0 mt-auto grid grid-cols-1 sm:grid-cols-2 gap-2">
-  <TooltipProvider>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Link href={`/quiz/${quiz._id}`} className="w-full">
-          <Button variant="outline" size="sm" className="w-full text-sm justify-center">
-            <Share2 className="mr-2 h-4 w-4" />
-            Share Link
-          </Button>
-        </Link>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p>Click to get the shareable quiz link</p>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-
-  <Link href={`/quizzes/${quiz._id}/results`} className="w-full">
-    <Button variant="secondary" size="sm" className="w-full text-sm justify-center">
-      <Eye className="mr-2 h-4 w-4" />
-      View Results
-    </Button>
-  </Link>
-</div>
-
+                  <div className="p-6 pt-0 flex flex-col md:flex-row gap-3">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="outline" size="sm" className="flex-1 bg-transparent w-full">
+                            <Share2 className="mr-2 h-4 w-4" />
+                            <Link href={`/quiz/${quiz._id}`}>Share Link</Link>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Click to get the shareable quiz link</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <Button variant="secondary" size="sm" asChild className="flex-1 w-full">
+                      <Link href={`/quizzes/${quiz._id}/results`}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        View Results
+                      </Link>
+                    </Button>
+                  </div>
                 </Card>
               ))}
             </div>
