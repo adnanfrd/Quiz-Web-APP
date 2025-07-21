@@ -4,8 +4,8 @@ import Link from "next/link"
 import { getQuizzesFromDb } from "@/lib/quiz-store"
 import { format } from "date-fns"
 
-export default function AdminDashboardPage() {
-  const quizzes = getQuizzesFromDb()
+export default async function AdminDashboardPage() {
+  const quizzes = await getQuizzesFromDb()
 
   return (
     <div className="grid gap-6">
