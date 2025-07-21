@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
 
+export const dynamic = "force-dynamic"
+
 export default async function AdminDashboardPage() {
   const quizzes = await getQuizzesFromDb()
 
