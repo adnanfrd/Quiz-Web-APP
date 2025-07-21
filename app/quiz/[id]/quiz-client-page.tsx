@@ -1,13 +1,12 @@
 "use client"
 
 import { useEffect, useState, useRef, useCallback } from "react"
-import type { Quiz, Question } from "@/lib/quiz-store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import { submitQuiz } from "@/lib/actions"
+import { submitQuiz } from "@/lib/actions" // Use the Server Action
 import { useToast } from "@/components/ui/use-toast"
 import {
   AlertDialog,
@@ -18,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import type { Quiz, Question } from "@/lib/quiz-store" // Import types from quiz-store
 
 interface QuizClientPageProps {
   quiz: Quiz
@@ -51,7 +51,7 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
       }
 
       const answersArray = quiz.questions.map((_, index) => currentAnswers[index] ?? -1)
-      const result = await submitQuiz(quiz.id, answersArray)
+      const result = await submitQuiz(quiz._id!, answersArray) // Use quiz._id and call Server Action
 
       if (result.success) {
         setScore(result.score ?? null)
@@ -72,7 +72,7 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
         document.exitFullscreen()
       }
     },
-    [quiz.id, currentAnswers, quizSubmitted, toast],
+    [quiz._id, currentAnswers, quizSubmitted, toast],
   )
 
   // Timer effect

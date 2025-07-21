@@ -1,5 +1,37 @@
-import { v4 as uuidv4 } from "uuid"
+import dbConnect from "./mongodb"
+import mongoose from "mongoose"
 
+// Define Mongoose Schemas
+const QuestionSchema = new mongoose.Schema({
+  questionText: { type: String, required: true },
+  options: { type: [String], required: true },
+  correctAnswerIndex: { type: Number, required: true },
+})
+
+const QuizSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, default: "" },
+  durationMinutes: { type: Number, required: true, min: 1 },
+  maxAttempts: { type: Number, required: true, min: 0 }, // 0 for unlimited
+  questions: { type: [QuestionSchema], required: true },
+  createdAt: { type: Date, default: Date.now },
+})
+
+const QuizResultSchema = new mongoose.Schema({
+  quizId: { type: mongoose.Schema.Types.ObjectId, ref: "Quiz", required: true },
+  quizTitle: { type: String, required: true },
+  studentAnswers: { type: [Number], required: true },
+  correctAnswers: { type: [Number], required: true },
+  score: { type: Number, required: true },
+  totalQuestions: { type: Number, required: true },
+  submittedAt: { type: Date, default: Date.now },
+})
+
+// Export Mongoose Models
+export const QuizModel = mongoose.models.Quiz || mongoose.model("Quiz", QuizSchema)
+export const QuizResultModel = mongoose.models.QuizResult || mongoose.model("QuizResult", QuizResultSchema)
+
+// Define TypeScript interfaces for data
 export interface Question {
   questionText: string
   options: string[]
@@ -7,7 +39,7 @@ export interface Question {
 }
 
 export interface Quiz {
-  id: string
+  _id?: string // MongoDB ID
   title: string
   description: string
   durationMinutes: number
@@ -17,7 +49,7 @@ export interface Quiz {
 }
 
 export interface QuizResult {
-  id: string
+  _id?: string // MongoDB ID
   quizId: string
   quizTitle: string
   studentAnswers: number[] // Array of selected option indices
@@ -27,62 +59,59 @@ export interface QuizResult {
   submittedAt: string
 }
 
-// In-memory store for demonstration purposes
-const quizzes: Map<string, Quiz> = new Map()
-const quizResults: Map<string, QuizResult[]> = new Map()
-
-export function createQuiz(data: Omit<Quiz, "id" | "createdAt">): Quiz {
-  const newQuiz: Quiz = {
-    id: uuidv4(),
-    createdAt: new Date().toISOString(),
-    ...data,
-  }
-  quizzes.set(newQuiz.id, newQuiz)
-  return newQuiz
+// Data access functions
+export async function createQuizInDb(data: Omit<Quiz, "_id" | "createdAt">): Promise<Quiz> {
+  await dbConnect()
+  const newQuiz = new QuizModel(data)
+  await newQuiz.save()
+  return newQuiz.toObject()
 }
 
-export function getQuiz(id: string): Quiz | undefined {
-  return quizzes.get(id)
+export async function getQuizFromDb(id: string): Promise<Quiz | null> {
+  await dbConnect()
+  const quiz = await QuizModel.findById(id).lean()
+  return quiz
 }
 
-export function getQuizzes(): Quiz[] {
-  return Array.from(quizzes.values())
+export async function getQuizzesFromDb(): Promise<Quiz[]> {
+  await dbConnect()
+  const quizzes = await QuizModel.find({}).lean()
+  return quizzes
 }
 
-export function saveQuizResult(
+export async function saveQuizResultInDb(
   quizId: string,
   quizTitle: string,
   studentAnswers: number[],
   correctAnswers: number[],
   score: number,
   totalQuestions: number,
-): QuizResult {
-  const newResult: QuizResult = {
-    id: uuidv4(),
+): Promise<QuizResult> {
+  await dbConnect()
+  const newResult = new QuizResultModel({
     quizId,
     quizTitle,
     studentAnswers,
     correctAnswers,
     score,
     totalQuestions,
-    submittedAt: new Date().toISOString(),
-  }
-
-  if (!quizResults.has(quizId)) {
-    quizResults.set(quizId, [])
-  }
-  quizResults.get(quizId)?.push(newResult)
-  return newResult
+  })
+  await newResult.save()
+  return newResult.toObject()
 }
 
-export function getQuizResults(quizId: string): QuizResult[] {
-  return quizResults.get(quizId) || []
+export async function getQuizResultsFromDb(quizId: string): Promise<QuizResult[]> {
+  await dbConnect()
+  const results = await QuizResultModel.find({ quizId }).lean()
+  return results
 }
 
 // Optional: Seed some dummy data for testing
-function seedData() {
-  if (quizzes.size === 0) {
-    const dummyQuiz1 = createQuiz({
+async function seedData() {
+  await dbConnect()
+  const quizCount = await QuizModel.countDocuments()
+  if (quizCount === 0) {
+    const dummyQuiz1 = await createQuizInDb({
       title: "General Knowledge Quiz",
       description: "Test your general knowledge!",
       durationMinutes: 10,
@@ -106,7 +135,7 @@ function seedData() {
       ],
     })
 
-    const dummyQuiz2 = createQuiz({
+    const dummyQuiz2 = await createQuizInDb({
       title: "Science Basics",
       description: "A quick test on fundamental science concepts.",
       durationMinutes: 5,
@@ -126,23 +155,29 @@ function seedData() {
     })
 
     // Add some dummy results for dummyQuiz1
-    saveQuizResult(
-      dummyQuiz1.id,
+    await saveQuizResultInDb(
+      dummyQuiz1._id!.toString(),
       dummyQuiz1.title,
       [2, 1, 1], // Correct answers for dummyQuiz1
       [2, 1, 1],
       3,
       3,
     )
-    saveQuizResult(
-      dummyQuiz1.id,
+    await saveQuizResultInDb(
+      dummyQuiz1._id!.toString(),
       dummyQuiz1.title,
       [0, 1, 0], // Incorrect answers
       [2, 1, 1],
       1,
       3,
     )
+    console.log("Dummy data seeded.")
+  } else {
+    console.log("Database already contains quizzes, skipping seeding.")
   }
 }
 
-seedData()
+// Call seedData on server startup (e.g., in a global setup file or API route)
+// For Next.js, this might be called in a top-level API route or a global setup.
+// For simplicity, we'll call it here, but in a larger app, consider a dedicated setup script.
+seedData().catch(console.error)

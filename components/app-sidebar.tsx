@@ -21,12 +21,12 @@ export function AppSidebar() {
   const adminItems = [
     {
       title: "Dashboard",
-      url: "/admin",
+      url: "/", // Changed from /admin
       icon: LayoutDashboard,
     },
     {
       title: "Create Quiz",
-      url: "/admin/quizzes/new",
+      url: "/quizzes/new", // Changed from /admin/quizzes/new
       icon: PlusCircle,
     },
   ]
@@ -34,7 +34,9 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <Link href="/admin" className="flex items-center gap-2 p-2 text-lg font-semibold">
+        <Link href="/" className="flex items-center gap-2 p-2 text-lg font-semibold">
+          {" "}
+          {/* Changed from /admin */}
           <span className="sr-only">Quiz Admin</span>
           <LayoutDashboard className="h-6 w-6" />
           <span>Quiz Admin</span>

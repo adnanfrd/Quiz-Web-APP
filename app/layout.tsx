@@ -12,7 +12,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Quiz Software",
   description: "A web-based quiz system for student assessments.",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default async function RootLayout({
@@ -28,9 +28,7 @@ export default async function RootLayout({
       <body className={inter.className}>
         <SidebarProvider defaultOpen={defaultOpen}>
           <AppSidebar />
-          <main className="flex-1 flex flex-col md:ml-[--sidebar-width] group-data-[collapsible=icon]:md:ml-[--sidebar-width-icon] transition-[margin-left] ease-linear">
-            {children}
-          </main>
+          {children}
         </SidebarProvider>
         <Toaster />
       </body>
