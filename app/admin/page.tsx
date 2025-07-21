@@ -1,11 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { getQuizzes } from "@/lib/quiz-store"
+import { getQuizzesFromDb } from "@/lib/quiz-store"
 import { format } from "date-fns"
 
 export default function AdminDashboardPage() {
-  const quizzes = getQuizzes()
+  const quizzes = getQuizzesFromDb()
 
   return (
     <div className="grid gap-6">

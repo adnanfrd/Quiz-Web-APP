@@ -1,10 +1,10 @@
-import { getQuizResults } from "@/lib/quiz-store"
+import { getQuizResultsFromDb } from "@/lib/quiz-store"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { format } from "date-fns"
 
 export default function QuizResultsPage({ params }: { params: { id: string } }) {
-  const quizResults = getQuizResults(params.id)
+  const quizResults = getQuizResultsFromDb(params.id)
 
   if (!quizResults || quizResults.length === 0) {
     return (

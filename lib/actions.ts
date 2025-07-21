@@ -18,7 +18,7 @@ export async function createQuiz(data: CreateQuizData) {
     revalidatePath("/") // Revalidate root path to show new quiz on admin dashboard
     return { success: true, quizId: newQuiz._id }
   } catch (error: any) {
-    console.error("Error creating quiz:", error)
+    console.error("Error in createQuiz Server Action:", error)
     return { success: false, message: error.message || "Failed to create quiz." }
   }
 }
@@ -45,7 +45,7 @@ export async function submitQuiz(quizId: string, studentAnswers: number[]) {
 
     return { success: true, score, message: "Quiz submitted successfully!" }
   } catch (error: any) {
-    console.error("Error submitting quiz:", error)
+    console.error("Error in submitQuiz Server Action:", error)
     return { success: false, message: error.message || "Failed to submit quiz." }
   }
 }
