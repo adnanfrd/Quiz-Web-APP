@@ -9,9 +9,7 @@ if (!MONGODB_URI) {
 
 export default async function dbConnect() {
   try {
-    await mongoose.connect(MONGODB_URI as string, {
-      bufferCommands: false,
-    })
+    await mongoose.connect(MONGODB_URI as string)
     console.log("✅ MongoDB connected")
   } catch (error) {
     console.error("❌ MongoDB connection error:", error)
