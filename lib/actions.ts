@@ -1,6 +1,6 @@
 "use server"
 
-import { createQuizInDb, getQuizFromDb, saveQuizResultInDb } from "./quiz-store"
+import { createQuizInDb, getQuizFromDb, saveQuizResultInDb, deleteQuizFromDb } from "./quiz-store"
 import { revalidatePath } from "next/cache"
 import type { Question } from "./quiz-store"
 
@@ -62,5 +62,19 @@ export async function submitQuiz(quizId: string, studentId: string, studentName:
   } catch (error: any) {
     console.error("Error in submitQuiz Server Action:", error)
     return { success: false, message: error.message || "Failed to submit quiz." }
+  }
+}
+
+export async function deleteQuiz(quizId: string) {
+  try {
+    const result = await deleteQuizFromDb(quizId);
+    if (result.success) {
+      revalidatePath("/");
+      return { success: true };
+    } else {
+      return { success: false, message: result.message };
+    }
+  } catch (error: any) {
+    return { success: false, message: error.message || "Failed to delete quiz." };
   }
 }

@@ -4,7 +4,8 @@ import { format } from "date-fns"
 import { getQuizResultsFromDb } from "@/lib/quiz-store" // Import from the new quiz-store
 import type { QuizResult } from "@/lib/quiz-store" // Import QuizResult type
 
-export default async function QuizResultsPage({ params }: { params: { id: string } }) {
+export default async function QuizResultsPage(props: { params: { id: string } }) {
+  const params = await Promise.resolve(props.params);
   const quizResults: QuizResult[] = await getQuizResultsFromDb(params.id)
 
   if (!quizResults || quizResults.length === 0) {

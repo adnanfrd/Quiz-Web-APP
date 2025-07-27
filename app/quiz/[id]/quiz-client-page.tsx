@@ -247,6 +247,44 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
     }
   }, [quizSubmitted, timeLeft, toast]);
 
+  // Block Escape key during quiz
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!quizSubmitted && (e.key === 'Escape' || e.key === 'Esc')) {
+        e.preventDefault();
+        e.stopPropagation();
+        toast({
+          title: "Fullscreen Required",
+          description: "You cannot exit fullscreen until you submit the quiz or time runs out.",
+          variant: "destructive",
+        });
+        // Re-request fullscreen if exited
+        if (!document.fullscreenElement && quizContainerRef.current) {
+          quizContainerRef.current.requestFullscreen().catch(() => {});
+        }
+        return false;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [quizSubmitted, toast]);
+
+  // Re-request fullscreen if exited during quiz
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!quizSubmitted && !document.fullscreenElement && quizContainerRef.current) {
+        toast({
+          title: "Fullscreen Required",
+          description: "You cannot exit fullscreen until you submit the quiz or time runs out.",
+          variant: "destructive",
+        });
+        quizContainerRef.current.requestFullscreen().catch(() => {});
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, [quizSubmitted, toast]);
+
   const handleAnswerChange = (questionIndex: number, optionIndex: number) => {
     setCurrentAnswers((prev) => ({
       ...prev,

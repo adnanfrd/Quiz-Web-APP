@@ -99,6 +99,17 @@ export async function getQuizzesFromDb(): Promise<Quiz[]> {
   return quizzes as unknown as Quiz[] // ✅ Fix
 }
 
+export async function deleteQuizFromDb(id: string): Promise<{ success: boolean; message?: string }> {
+  await dbConnect();
+  try {
+    await QuizModel.findByIdAndDelete(id);
+    await QuizResultModel.deleteMany({ quizId: id }); // Optionally delete all results for this quiz
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, message: error.message };
+  }
+}
+
 export async function saveQuizResultInDb(
   quizId: string,
   quizTitle: string,
