@@ -30,6 +30,8 @@ export default async function QuizResultsPage({ params }: { params: { id: string
             <TableHeader>
               <TableRow>
                 <TableHead>Submission ID</TableHead>
+                <TableHead>Student ID</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Score</TableHead>
                 <TableHead>Submitted At</TableHead>
                 <TableHead>Answers</TableHead>
@@ -37,8 +39,12 @@ export default async function QuizResultsPage({ params }: { params: { id: string
             </TableHeader>
             <TableBody>
               {quizResults.map((result) => (
-                <TableRow key={result._id}>
-                  <TableCell className="font-medium">{result._id!.substring(0, 8)}...</TableCell>
+                <TableRow key={typeof result._id === "string" ? result._id : String(result._id)}>
+                  <TableCell className="font-medium">
+                    {`${String(result._id).substring(0, 8)}...`}
+                  </TableCell>
+                  <TableCell>{result.studentId}</TableCell>
+                  <TableCell>{result.studentName}</TableCell>
                   <TableCell>
                     {result.score} / {result.totalQuestions}
                   </TableCell>

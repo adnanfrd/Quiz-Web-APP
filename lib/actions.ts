@@ -25,12 +25,12 @@ export async function createQuiz(data: CreateQuizData) {
   }
 }
 
-export async function submitQuiz(quizId: string, studentAnswers: number[]) {
+export async function submitQuiz(quizId: string, studentId: string, studentName: string, studentAnswers: number[]) {
   try {
-    console.log(`Server Action: submitQuiz - Attempting to get quiz ${quizId} from DB.`) // Add this log
+    console.log(`Server Action: submitQuiz - Attempting to get quiz ${quizId} from DB.`)
     const quiz = await getQuizFromDb(quizId)
     if (!quiz) {
-      console.warn(`Server Action: submitQuiz - Quiz ${quizId} not found.`) // Add this log
+      console.warn(`Server Action: submitQuiz - Quiz ${quizId} not found.`)
       return { success: false, message: "Quiz not found." }
     }
 
@@ -44,9 +44,18 @@ export async function submitQuiz(quizId: string, studentAnswers: number[]) {
       }
     })
 
-    console.log(`Server Action: submitQuiz - Saving quiz result for quiz ${quizId}. Score: ${score}`) // Add this log
-    await saveQuizResultInDb(quizId, quiz.title, studentAnswers, correctAnswers, score, quiz.questions.length)
-    console.log("Server Action: submitQuiz - Quiz result saved successfully.") // Add this log
+    console.log(`Server Action: submitQuiz - Saving quiz result for quiz ${quizId}. Score: ${score}`)
+    await saveQuizResultInDb(
+      quizId,
+      quiz.title,
+      studentId,
+      studentName,
+      studentAnswers,
+      correctAnswers,
+      score,
+      quiz.questions.length
+    )
+    console.log("Server Action: submitQuiz - Quiz result saved successfully.")
     revalidatePath(`/quizzes/${quizId}/results`)
 
     return { success: true, score, message: "Quiz submitted successfully!" }

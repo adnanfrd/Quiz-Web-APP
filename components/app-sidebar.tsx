@@ -18,6 +18,11 @@ import { usePathname } from "next/navigation"
 export function AppSidebar() {
   const pathname = usePathname()
 
+  // Hide sidebar on quiz pages
+  if (pathname.startsWith("/quiz/")) {
+    return null;
+  }
+
   const adminItems = [
     {
       title: "Dashboard",

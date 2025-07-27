@@ -18,6 +18,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import type { Quiz, Question } from "@/lib/quiz-store" // Import types from quiz-store
+import { useRouter } from "next/navigation"
+import { Input } from "@/components/ui/input"
 
 interface QuizClientPageProps {
   quiz: Quiz
@@ -34,6 +36,13 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
   const { toast } = useToast()
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const quizContainerRef = useRef<HTMLDivElement>(null)
+  const router = useRouter();
+  const [studentId, setStudentId] = useState("");
+  const [studentName, setStudentName] = useState("");
+  const [showUserModal, setShowUserModal] = useState(true);
+
+  // Prevent quiz interaction until user info is provided
+  const quizLocked = showUserModal || !studentId || !studentName;
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60)
@@ -43,7 +52,7 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
 
   const handleSubmit = useCallback(
     async (autoSubmit = false) => {
-      if (quizSubmitted) return
+      if (quizSubmitted || quizLocked) return;
 
       setQuizSubmitted(true)
       if (timerRef.current) {
@@ -51,7 +60,12 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
       }
 
       const answersArray = quiz.questions.map((_, index) => currentAnswers[index] ?? -1)
-      const result = await submitQuiz(quiz._id!, answersArray) // Use quiz._id and call Server Action
+      const result = await submitQuiz(
+        quiz._id!,
+        studentId,
+        studentName,
+        answersArray
+      );
 
       if (result.success) {
         setScore(result.score ?? null)
@@ -72,7 +86,7 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
         document.exitFullscreen()
       }
     },
-    [quiz._id, currentAnswers, quizSubmitted, toast],
+    [quiz._id, currentAnswers, quizSubmitted, toast, studentId, studentName, quizLocked],
   )
 
   // Timer effect
@@ -201,6 +215,38 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
     }
   }, [tabSwitchCount, quizSubmitted, handleSubmit, toast])
 
+  // Block navigation and warn on tab close/refresh during active quiz
+  useEffect(() => {
+    if (!quizSubmitted && timeLeft > 0) {
+      // Block browser/tab close/refresh
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        e.returnValue = "You cannot leave the quiz until you submit or time runs out.";
+        return e.returnValue;
+      };
+      window.addEventListener("beforeunload", handleBeforeUnload);
+
+      // Block Next.js route changes
+      const handleRouteChange = (url: string) => {
+        if (!quizSubmitted && timeLeft > 0) {
+          toast({
+            title: "Quiz in Progress",
+            description: "You cannot leave the quiz until you submit or time runs out.",
+            variant: "destructive",
+          });
+          // Prevent navigation
+          throw "Route change aborted: Quiz in progress.";
+        }
+      };
+      // Next.js 13+ app router does not have router.events, so we can only block browser navigation here
+      // Optionally, you can use a custom context to disable sidebar links
+
+      return () => {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+      };
+    }
+  }, [quizSubmitted, timeLeft, toast]);
+
   const handleAnswerChange = (questionIndex: number, optionIndex: number) => {
     setCurrentAnswers((prev) => ({
       ...prev,
@@ -210,6 +256,38 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
 
   return (
     <div ref={quizContainerRef} className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+      {/* User Info Modal */}
+      {showUserModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
+            <h2 className="text-xl font-bold mb-4">Enter Your Details</h2>
+            <div className="mb-4">
+              <label className="block mb-1 font-medium">User ID</label>
+              <Input
+                value={studentId}
+                onChange={e => setStudentId(e.target.value)}
+                placeholder="Enter your ID"
+                autoFocus
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block mb-1 font-medium">Name</label>
+              <Input
+                value={studentName}
+                onChange={e => setStudentName(e.target.value)}
+                placeholder="Enter your name"
+              />
+            </div>
+            <button
+              className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-50"
+              disabled={!studentId || !studentName}
+              onClick={() => setShowUserModal(false)}
+            >
+              Start Quiz
+            </button>
+          </div>
+        </div>
+      )}
       <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -243,7 +321,7 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
                 onValueChange={(value) => handleAnswerChange(qIndex, Number.parseInt(value))}
                 value={currentAnswers[qIndex]?.toString() ?? ""}
                 className="space-y-2"
-                disabled={quizSubmitted}
+                disabled={quizSubmitted || quizLocked}
               >
                 {q.options.map((option: string, oIndex: number) => (
                   <div key={oIndex} className="flex items-center space-x-2">
@@ -256,7 +334,7 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
           ))}
         </CardContent>
         <CardFooter className="flex justify-between items-center">
-          <Button onClick={() => handleSubmit()} disabled={quizSubmitted || timeLeft <= 0}>
+          <Button onClick={() => handleSubmit()} disabled={quizSubmitted || timeLeft <= 0 || quizLocked}>
             {quizSubmitted ? "Submitted" : "Submit Quiz"}
           </Button>
           {quizSubmitted && score !== null && (

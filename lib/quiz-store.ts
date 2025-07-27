@@ -20,6 +20,8 @@ const QuizSchema = new mongoose.Schema({
 const QuizResultSchema = new mongoose.Schema({
   quizId: { type: mongoose.Schema.Types.ObjectId, ref: "Quiz", required: true },
   quizTitle: { type: String, required: true },
+  studentId: { type: String, required: true }, // New field
+  studentName: { type: String, required: true }, // New field
   studentAnswers: { type: [Number], required: true },
   correctAnswers: { type: [Number], required: true },
   score: { type: Number, required: true },
@@ -52,6 +54,8 @@ export interface QuizResult {
   _id?: string // MongoDB ID
   quizId: string
   quizTitle: string
+  studentId: string // New field
+  studentName: string // New field
   studentAnswers: number[] // Array of selected option indices
   correctAnswers: number[] // Array of correct option indices
   score: number
@@ -70,7 +74,23 @@ export async function createQuizInDb(data: Omit<Quiz, "_id" | "createdAt">): Pro
 export async function getQuizFromDb(id: string): Promise<Quiz | null> {
   await dbConnect()
   const quiz = await QuizModel.findById(id).lean()
-  return quiz as Quiz | null // ✅ Fix
+  if (!quiz || Array.isArray(quiz)) return null;
+  // Convert _id and question _id fields to string
+  const plainQuiz = {
+    _id: quiz._id?.toString?.() ?? quiz._id,
+    title: quiz.title,
+    description: quiz.description,
+    durationMinutes: quiz.durationMinutes,
+    maxAttempts: quiz.maxAttempts,
+    createdAt: quiz.createdAt?.toISOString?.() ?? quiz.createdAt,
+    questions: Array.isArray(quiz.questions)
+      ? quiz.questions.map((q: any) => ({
+          ...q,
+          _id: q._id?.toString?.() ?? q._id,
+        }))
+      : [],
+  };
+  return plainQuiz as Quiz;
 }
 
 export async function getQuizzesFromDb(): Promise<Quiz[]> {
@@ -82,6 +102,8 @@ export async function getQuizzesFromDb(): Promise<Quiz[]> {
 export async function saveQuizResultInDb(
   quizId: string,
   quizTitle: string,
+  studentId: string, // New param
+  studentName: string, // New param
   studentAnswers: number[],
   correctAnswers: number[],
   score: number,
@@ -91,6 +113,8 @@ export async function saveQuizResultInDb(
   const newResult = new QuizResultModel({
     quizId,
     quizTitle,
+    studentId, // New field
+    studentName, // New field
     studentAnswers,
     correctAnswers,
     score,
@@ -158,6 +182,8 @@ async function seedData() {
     await saveQuizResultInDb(
       dummyQuiz1._id!.toString(),
       dummyQuiz1.title,
+      "student123", // New field
+      "John Doe", // New field
       [2, 1, 1], // Correct answers for dummyQuiz1
       [2, 1, 1],
       3,
@@ -166,6 +192,8 @@ async function seedData() {
     await saveQuizResultInDb(
       dummyQuiz1._id!.toString(),
       dummyQuiz1.title,
+      "student456", // New field
+      "Jane Smith", // New field
       [0, 1, 0], // Incorrect answers
       [2, 1, 1],
       1,
