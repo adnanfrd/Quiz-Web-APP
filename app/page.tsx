@@ -1,17 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { format } from "date-fns"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { getQuizzesFromDb } from "@/lib/quiz-store"
-import { Clock, Repeat, Share2, Eye, PlusCircle } from "lucide-react"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { Badge } from "@/components/ui/badge"
+import {PlusCircle } from "lucide-react"
+import QuizCard from "@/components/QuizCard"
 
 export const dynamic = "force-dynamic"
 
@@ -54,62 +46,7 @@ export default async function AdminDashboardPage() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {quizzes.map((quiz) => (
-                <Card
-                  key={quiz._id}
-                  className="flex flex-col justify-between h-full hover:shadow-lg transition-shadow duration-200"
-                >
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-xl font-semibold text-gray-900 dark:text-gray-50">
-                      {quiz.title}
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                      {quiz.description}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span>Duration: {quiz.durationMinutes} minutes</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Repeat className="h-4 w-4 text-muted-foreground" />
-                      <span>Attempts: </span>
-                      {quiz.maxAttempts === 0 ? (
-                        <Badge variant="secondary">Unlimited</Badge>
-                      ) : (
-                        <Badge variant="secondary">{quiz.maxAttempts}</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground pt-2">
-                      Created: {format(new Date(quiz.createdAt), "PPP")}
-                    </p>
-                  </CardContent>
-                  <div className="p-6 pt-0 flex flex-col md:flex-row gap-3">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 bg-transparent w-full"
-                          >
-                            <Share2 className="mr-2 h-4 w-4" />
-                            <Link href={`/quiz/${quiz._id}`}>Share Link</Link>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Click to get the shareable quiz link</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <Button variant="secondary" size="sm" asChild className="flex-1 w-full">
-                      <Link href={`/quizzes/${quiz._id}/results`}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Results
-                      </Link>
-                    </Button>
-                  </div>
-                </Card>
+              <QuizCard key={quiz._id} quiz={quiz} />
               ))}
             </div>
           )}
