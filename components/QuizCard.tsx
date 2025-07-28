@@ -33,7 +33,7 @@ export default function QuizCard({ quiz }: { quiz: any }) {
     if (!confirmed) return
 
     try {
-      const res = await fetch(`/quiz/${quiz._id}`, {
+      const res = await fetch(`/quiz/delete/${quiz._id}`, {
         method: "DELETE",
       })
       const data = await res.json()
