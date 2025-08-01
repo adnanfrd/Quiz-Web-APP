@@ -79,17 +79,16 @@ export default function QuizCard({ quiz }: { quiz: any }) {
         </p>
       </CardContent>
 
-     {/* Action Buttons */}
-<CardContent className="pt-0">
-  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-    <div className="flex flex-col sm:flex-row gap-2 w-full">
+     <CardContent className="pt-0">
+  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-wrap">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="outline"
               size="sm"
-              className="flex-1"
+              className="flex-1 sm:w-auto"
               onClick={handleCopy}
             >
               <Share2 className="mr-2 h-4 w-4" />
@@ -106,29 +105,27 @@ export default function QuizCard({ quiz }: { quiz: any }) {
         variant="secondary"
         size="sm"
         asChild
-        className="flex-1"
+        className="flex-1 sm:w-auto"
       >
         <Link href={`/quizzes/${quiz._id}/results`}>
           <Eye className="mr-2 h-4 w-4" />
           View Results
         </Link>
       </Button>
-    </div>
 
-   
-  </div>
-  <div className="text-center p-4">
-     <Button
-      variant="destructive"
-      size="sm"
-      className="w-full md:w-auto mt-2 md:mt-0"
-      onClick={handleDelete}
-    >
-      <Trash2 className="mr-2 h-4 w-4" />
-      Delete Quiz
-    </Button>
+      <Button
+        variant="destructive"
+        size="sm"
+        className="flex-1 sm:w-auto"
+        onClick={handleDelete}
+      >
+        <Trash2 className="mr-2 h-4 w-4" />
+        Delete Quiz
+      </Button>
+    </div>
   </div>
 </CardContent>
+
 
     </Card>
   )
