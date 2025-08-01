@@ -40,6 +40,7 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
   const [studentId, setStudentId] = useState("");
   const [studentName, setStudentName] = useState("");
   const [showUserModal, setShowUserModal] = useState(true);
+  const [isScreenFrozen, setIsScreenFrozen] = useState(true);
 
   // Prevent quiz interaction until user info is provided
   const quizLocked = showUserModal || !studentId || !studentName;
@@ -167,7 +168,6 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
           description: "Please remain in fullscreen mode during the quiz.",
           variant: "destructive",
         })
-        // Optionally auto-submit here or increment tabSwitchCount
         setTabSwitchCount((prev) => prev + 1)
         setShowWarning(true)
       }
@@ -218,28 +218,12 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
   // Block navigation and warn on tab close/refresh during active quiz
   useEffect(() => {
     if (!quizSubmitted && timeLeft > 0) {
-      // Block browser/tab close/refresh
       const handleBeforeUnload = (e: BeforeUnloadEvent) => {
         e.preventDefault();
         e.returnValue = "You cannot leave the quiz until you submit or time runs out.";
         return e.returnValue;
       };
       window.addEventListener("beforeunload", handleBeforeUnload);
-
-      // Block Next.js route changes
-      const handleRouteChange = (url: string) => {
-        if (!quizSubmitted && timeLeft > 0) {
-          toast({
-            title: "Quiz in Progress",
-            description: "You cannot leave the quiz until you submit or time runs out.",
-            variant: "destructive",
-          });
-          // Prevent navigation
-          throw "Route change aborted: Quiz in progress.";
-        }
-      };
-      // Next.js 13+ app router does not have router.events, so we can only block browser navigation here
-      // Optionally, you can use a custom context to disable sidebar links
 
       return () => {
         window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -258,7 +242,6 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
           description: "You cannot exit fullscreen until you submit the quiz or time runs out.",
           variant: "destructive",
         });
-        // Re-request fullscreen if exited
         if (!document.fullscreenElement && quizContainerRef.current) {
           quizContainerRef.current.requestFullscreen().catch(() => {});
         }
@@ -292,12 +275,21 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
     }))
   }
 
+  // Unfreeze screen after user modal is closed
+  useEffect(() => {
+    if (!showUserModal) {
+      setIsScreenFrozen(false);
+    }
+  }, [showUserModal]);
+
   return (
-    <div ref={quizContainerRef} className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+    <div ref={quizContainerRef} 
+         className={`min-h-screen flex flex-col items-center justify-center bg-background p-4`}
+    >
       {/* User Info Modal */}
       {showUserModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-sm transform transition-all duration-300 scale-100 hover:scale-105">
             <h2 className="text-xl font-bold mb-4">Enter Your Details</h2>
             <div className="mb-4">
               <label className="block mb-1 font-medium">User ID</label>
@@ -306,6 +298,7 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
                 onChange={e => setStudentId(e.target.value)}
                 placeholder="Enter your ID"
                 autoFocus
+                className="transition-all duration-200 focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div className="mb-4">
@@ -314,10 +307,11 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
                 value={studentName}
                 onChange={e => setStudentName(e.target.value)}
                 placeholder="Enter your name"
+                className="transition-all duration-200 focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <button
-              className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-50"
+              className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-50 hover:bg-blue-700 transition-colors duration-200"
               disabled={!studentId || !studentName}
               onClick={() => setShowUserModal(false)}
             >
@@ -341,47 +335,60 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">{quiz.title}</CardTitle>
-          <div className="flex justify-between items-center mt-2">
-            <span className="text-sm text-muted-foreground">Time Left: {formatTime(timeLeft)}</span>
-            <Progress value={(timeLeft / (quiz.durationMinutes * 60)) * 100} className="w-1/2 h-2" />
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {quiz.questions.map((q: Question, qIndex: number) => (
-            <div key={qIndex} className="border-b pb-4 last:border-b-0 last:pb-0">
-              <p className="font-medium mb-3">
-                {qIndex + 1}. {q.questionText}
-              </p>
-              <RadioGroup
-                onValueChange={(value) => handleAnswerChange(qIndex, Number.parseInt(value))}
-                value={currentAnswers[qIndex]?.toString() ?? ""}
-                className="space-y-2"
-                disabled={quizSubmitted || quizLocked}
-              >
-                {q.options.map((option: string, oIndex: number) => (
-                  <div key={oIndex} className="flex items-center space-x-2">
-                    <RadioGroupItem value={oIndex.toString()} id={`q${qIndex}-o${oIndex}`} />
-                    <Label htmlFor={`q${qIndex}-o${oIndex}`}>{option}</Label>
-                  </div>
-                ))}
-              </RadioGroup>
+      {/* Hide quiz content while user modal is open */}
+      {!showUserModal && (
+        <Card className="w-full max-w-2xl mx-auto shadow-lg transform transition-all duration-300 hover:shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-center text-2xl">{quiz.title}</CardTitle>
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-sm text-muted-foreground">
+                Time Left: {formatTime(timeLeft)}
+              </span>
+              <Progress value={(timeLeft / (quiz.durationMinutes * 60)) * 100} className="w-1/2 h-2" />
             </div>
-          ))}
-        </CardContent>
-        <CardFooter className="flex justify-between items-center">
-          <Button onClick={() => handleSubmit()} disabled={quizSubmitted || timeLeft <= 0 || quizLocked}>
-            {quizSubmitted ? "Submitted" : "Submit Quiz"}
-          </Button>
-          {quizSubmitted && score !== null && (
-            <p className="text-lg font-semibold">
-              Your Score: {score} / {quiz.questions.length}
-            </p>
-          )}
-        </CardFooter>
-      </Card>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {quiz.questions.map((q: Question, qIndex: number) => (
+              <div key={qIndex} className="border-b pb-4 last:border-b-0 last:pb-0">
+                <p className="font-medium mb-3">
+                  {qIndex + 1}. {q.questionText}
+                </p>
+                <RadioGroup
+                  onValueChange={(value) => handleAnswerChange(qIndex, Number.parseInt(value))}
+                  value={currentAnswers[qIndex]?.toString() ?? ""}
+                  className="space-y-2"
+                  disabled={quizSubmitted || quizLocked}
+                >
+                  {q.options.map((option: string, oIndex: number) => (
+                    <div
+                      key={oIndex}
+                      className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+                    >
+                      <RadioGroupItem value={oIndex.toString()} id={`q${qIndex}-o${oIndex}`} />
+                      <Label htmlFor={`q${qIndex}-o${oIndex}`}>{option}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            ))}
+          </CardContent>
+          <CardFooter className="flex justify-between items-center">
+            <Button
+              onClick={() => handleSubmit()}
+              disabled={quizSubmitted || timeLeft <= 0 || quizLocked}
+              className="hover:bg-blue-700 transition-colors duration-200"
+            >
+              {quizSubmitted ? "Submitted" : "Submit Quiz"}
+            </Button>
+            {quizSubmitted && score !== null && (
+              <p className="text-lg font-semibold">
+                Your Score: {score} / {quiz.questions.length} <br />
+                Submitted at: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+              </p>
+            )}
+          </CardFooter>
+        </Card>
+      )}
     </div>
   )
 }
