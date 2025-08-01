@@ -204,7 +204,7 @@ export default function QuizClientPage({ quiz }: QuizClientPageProps) {
 
   // Auto-submit if tab switch count exceeds a threshold
   useEffect(() => {
-    const MAX_TAB_SWITCHES = 3 // Configurable threshold
+    const MAX_TAB_SWITCHES = 1 // Configurable threshold
     if (tabSwitchCount >= MAX_TAB_SWITCHES && !quizSubmitted) {
       handleSubmit(true)
       toast({
